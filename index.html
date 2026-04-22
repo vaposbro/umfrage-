@@ -1,79 +1,161 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
-  <title>Schüler Einnahmen & Ausgaben</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<meta charset="UTF-8">
+<title>Finanzanalyse Klasse 10</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background: linear-gradient(135deg, #1e1e2f, #2c2c54);
+  color: white;
+  text-align: center;
+  padding: 20px;
+}
+
+h1 {
+  margin-bottom: 10px;
+}
+
+.container {
+  max-width: 500px;
+  margin: auto;
+  background: rgba(255,255,255,0.05);
+  padding: 20px;
+  border-radius: 15px;
+  backdrop-filter: blur(10px);
+}
+
+input {
+  width: 80%;
+  padding: 8px;
+  margin: 5px;
+  border-radius: 8px;
+  border: none;
+}
+
+button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 10px;
+  background: #4CAF50;
+  color: white;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+button:hover {
+  background: #45a049;
+}
+
+canvas {
+  margin-top: 30px;
+  background: white;
+  border-radius: 15px;
+  padding: 10px;
+}
+</style>
 </head>
+
 <body>
 
-<h1>Umfrage: Einnahmen & Ausgaben</h1>
+<h1>📊 Einnahmen & Ausgaben</h1>
 
+<div class="container">
 <form id="form">
-  Einkommen: <input type="number" id="income"><br><br>
-  Kleidung: <input type="number" id="clothes"><br>
-  Essen: <input type="number" id="food"><br>
-  Freizeit: <input type="number" id="fun"><br>
-  Abos: <input type="number" id="subs"><br>
-  Sparen: <input type="number" id="save"><br><br>
-
-  <button type="submit">Speichern</button>
+  <input type="number" id="income" placeholder="Einkommen (€)" required><br>
+  <input type="number" id="clothes" placeholder="Kleidung"><br>
+  <input type="number" id="food" placeholder="Essen"><br>
+  <input type="number" id="fun" placeholder="Freizeit"><br>
+  <input type="number" id="subs" placeholder="Abos"><br>
+  <input type="number" id="save" placeholder="Sparen"><br>
+  <button type="submit">Hinzufügen</button>
 </form>
-
-<hr>
+</div>
 
 <canvas id="chart"></canvas>
 
 <script>
 let data = JSON.parse(localStorage.getItem("data")) || [];
 
-document.getElementById("form").addEventListener("submit", function(e){
+const ctx = document.getElementById("chart").getContext("2d");
+
+const chart = new Chart(ctx, {
+  type: 'bar',
+  data: {
+    labels: ["Durchschnitt"],
+    datasets: [
+      { label: "Kleidung", data: [0], backgroundColor: "#ff6b6b", stack: "stack1" },
+      { label: "Essen", data: [0], backgroundColor: "#feca57", stack: "stack1" },
+      { label: "Freizeit", data: [0], backgroundColor: "#48dbfb", stack: "stack1" },
+      { label: "Abos", data: [0], backgroundColor: "#1dd1a1", stack: "stack1" },
+      { label: "Sparen", data: [0], backgroundColor: "#5f27cd", stack: "stack1" },
+      {
+        label: "Einkommen",
+        type: "line",
+        data: [0],
+        borderColor: "white",
+        borderWidth: 3,
+        tension: 0.3
+      }
+    ]
+  },
+  options: {
+    responsive: true,
+    plugins: {
+      legend: {
+        labels: { color: "white" }
+      }
+    },
+    scales: {
+      x: {
+        stacked: true,
+        ticks: { color: "white" }
+      },
+      y: {
+        stacked: true,
+        ticks: { color: "white" }
+      }
+    }
+  }
+});
+
+function average(key) {
+  return data.length
+    ? data.reduce((sum, d) => sum + d[key], 0) / data.length
+    : 0;
+}
+
+function updateChart() {
+  chart.data.datasets[0].data[0] = average("clothes");
+  chart.data.datasets[1].data[0] = average("food");
+  chart.data.datasets[2].data[0] = average("fun");
+  chart.data.datasets[3].data[0] = average("subs");
+  chart.data.datasets[4].data[0] = average("save");
+  chart.data.datasets[5].data[0] = average("income");
+
+  chart.update();
+}
+
+document.getElementById("form").addEventListener("submit", function(e) {
   e.preventDefault();
 
-  let entry = {
-    income: +income.value,
-    clothes: +clothes.value,
-    food: +food.value,
-    fun: +fun.value,
-    subs: +subs.value,
-    save: +save.value
+  const entry = {
+    income: +income.value || 0,
+    clothes: +clothes.value || 0,
+    food: +food.value || 0,
+    fun: +fun.value || 0,
+    subs: +subs.value || 0,
+    save: +save.value || 0
   };
 
   data.push(entry);
   localStorage.setItem("data", JSON.stringify(data));
 
+  this.reset();
   updateChart();
 });
-
-function average(category){
-  return data.reduce((sum, d) => sum + d[category], 0) / data.length || 0;
-}
-
-function updateChart(){
-  let ctx = document.getElementById("chart");
-
-  new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels: ["Durchschnitt"],
-      datasets: [
-        { label: "Kleidung", data: [average("clothes")] },
-        { label: "Essen", data: [average("food")] },
-        { label: "Freizeit", data: [average("fun")] },
-        { label: "Abos", data: [average("subs")] },
-        { label: "Sparen", data: [average("save")] }
-      ]
-    },
-    options: {
-      plugins: { title: { display: true, text: "Durchschnittliche Ausgaben" } },
-      responsive: true,
-      scales: {
-        x: { stacked: true },
-        y: { stacked: true }
-      }
-    }
-  });
-}
 
 updateChart();
 </script>
