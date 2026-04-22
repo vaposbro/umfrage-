@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Schüler Einnahmen & Ausgaben</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+<h1>Umfrage: Einnahmen & Ausgaben</h1>
+
+<form id="form">
+  Einkommen: <input type="number" id="income"><br><br>
+  Kleidung: <input type="number" id="clothes"><br>
+  Essen: <input type="number" id="food"><br>
+  Freizeit: <input type="number" id="fun"><br>
+  Abos: <input type="number" id="subs"><br>
+  Sparen: <input type="number" id="save"><br><br>
+
+  <button type="submit">Speichern</button>
+</form>
+
+<hr>
+
+<canvas id="chart"></canvas>
+
+<script>
+let data = JSON.parse(localStorage.getItem("data")) || [];
+
+document.getElementById("form").addEventListener("submit", function(e){
+  e.preventDefault();
+
+  let entry = {
+    income: +income.value,
+    clothes: +clothes.value,
+    food: +food.value,
+    fun: +fun.value,
+    subs: +subs.value,
+    save: +save.value
+  };
+
+  data.push(entry);
+  localStorage.setItem("data", JSON.stringify(data));
+
+  updateChart();
+});
+
+function average(category){
+  return data.reduce((sum, d) => sum + d[category], 0) / data.length || 0;
+}
+
+function updateChart(){
+  let ctx = document.getElementById("chart");
+
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ["Durchschnitt"],
+      datasets: [
+        { label: "Kleidung", data: [average("clothes")] },
+        { label: "Essen", data: [average("food")] },
+        { label: "Freizeit", data: [average("fun")] },
+        { label: "Abos", data: [average("subs")] },
+        { label: "Sparen", data: [average("save")] }
+      ]
+    },
+    options: {
+      plugins: { title: { display: true, text: "Durchschnittliche Ausgaben" } },
+      responsive: true,
+      scales: {
+        x: { stacked: true },
+        y: { stacked: true }
+      }
+    }
+  });
+}
+
+updateChart();
+</script>
+
+</body>
+</html>
